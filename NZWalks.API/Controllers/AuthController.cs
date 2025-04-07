@@ -34,10 +34,10 @@ namespace NZWalks.API.Controllers
             {
                 if(registerRequestDto.Roles != null && registerRequestDto.Roles.Any())
                 {
-                    identityResult = await userManager.AddToRolesAsync(identityUser, registerRequestDto.Roles);
+                    identityResult = await userManager.AddToRolesAsync(identityUser, new List<string> { registerRequestDto.Roles });
                     if (identityResult.Succeeded)
                     {
-                        return Ok("User was registered! Please Login");
+                        return Ok();
                     }
                 }
             }
