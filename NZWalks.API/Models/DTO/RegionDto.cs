@@ -1,4 +1,6 @@
-﻿namespace NZWalks.API.Models.DTO
+﻿using Microsoft.Extensions.FileProviders;
+
+namespace NZWalks.API.Models.DTO
 {
     public class RegionDto
     {

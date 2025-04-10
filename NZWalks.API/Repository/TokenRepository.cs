@@ -28,7 +28,7 @@ namespace NZWalks.API.Repository
                     configuration["Jwt:Issuer"],
                     configuration["Jwt:Audience"],
                     claims,
-                    expires: DateTime.Now.AddSeconds(30),
+                    expires: DateTime.Now.AddHours(2),
                     signingCredentials: credentials
              );
             return new JwtSecurityTokenHandler().WriteToken(token);

@@ -17,12 +17,14 @@ namespace NZWalks.API.Controllers
     public class RegionsController : ControllerBase
     {
         private readonly IRegionRepository regionRepository;
+        private readonly CloudinaryService cloudinaryService;
 
         public IMapper Mapper { get; }
 
-        public RegionsController(IRegionRepository regionRepository, IMapper mapper)    //calling DbContext so that we can invoke Database instances(i.e tables)
+        public RegionsController(IRegionRepository regionRepository, CloudinaryService cloudinaryService, IMapper mapper)    //calling DbContext so that we can invoke Database instances(i.e tables)
         {
             this.regionRepository = regionRepository;
+            this.cloudinaryService = cloudinaryService;
             Mapper = mapper;
         }
 
@@ -58,9 +60,14 @@ namespace NZWalks.API.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Writer")]
-        public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto)
+        public async Task<IActionResult> Create([FromForm] AddRegionRequestDto addRegionRequestDto)
         {
             var regionDomainModel = Mapper.Map<Region>(addRegionRequestDto);
+            if(addRegionRequestDto.RegionImageUrl != null)
+            {
+                string imageUrl = await cloudinaryService.UploadImageAsync(addRegionRequestDto.RegionImageUrl);
+                regionDomainModel.RegionImageUrl = imageUrl;
+            }
             await regionRepository.CreateRegionAsync(regionDomainModel);
             return Ok("Region created successfully");
         }
@@ -68,9 +75,14 @@ namespace NZWalks.API.Controllers
         [HttpPut]
         [Route("{id:Guid}")]
         [Authorize(Roles = "Writer")]
-        public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRegionRequestDto updateRegionRequestDto)
+        public async Task<IActionResult> Update([FromRoute] Guid id, [FromForm] UpdateRegionRequestDto updateRegionRequestDto)
         {
             var regionDomainModel = Mapper.Map<Region>(updateRegionRequestDto);
+            if(updateRegionRequestDto.RegionImageUrl != null)
+            {
+                string imageUrl = await cloudinaryService.UploadImageAsync(updateRegionRequestDto.RegionImageUrl);
+                regionDomainModel.RegionImageUrl = imageUrl;
+            }
             await regionRepository.UpdateRegionAsync(id, regionDomainModel);
             //return Ok("Region updated successfully");
             return Ok();
@@ -85,5 +97,29 @@ namespace NZWalks.API.Controllers
             await regionRepository.DeleteRegionAsync(id);
             return Ok();
         }
+
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("No file uploaded.");
+            }
+
+            // Create a unique file name
+            var fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+            var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images", fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            // Build a public URL to access the image
+            var imageUrl = $"{Request.Scheme}://{Request.Host}/Images/{fileName}";
+
+            return Ok(new { imageUrl });
+        }
+
     }
 }
