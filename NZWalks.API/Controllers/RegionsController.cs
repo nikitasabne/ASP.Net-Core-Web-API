@@ -39,6 +39,16 @@ namespace NZWalks.API.Controllers
             return Ok(regionDto);
         }
 
+        // Provide the image's public ID from Cloudinary, and this function will return a signed, secure URL.
+        // This URL gives authorized access to the image and can only be used by you.
+        // You can also call this method from another function to get the secured/private image URL.
+        [HttpGet("get-private-image")]
+        public IActionResult GetPrivateImage([FromQuery] string publicId)
+        {
+            var url = cloudinaryService.GetPrivateImageUrl(publicId);
+            return Ok(new { imageUrl = url });
+        }
+
         [HttpGet]
         [Route("{id:guid}")]
         [Authorize(Roles = "Reader,Writer")]

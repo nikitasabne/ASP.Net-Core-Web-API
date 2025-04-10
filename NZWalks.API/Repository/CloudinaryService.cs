@@ -25,11 +25,25 @@ namespace NZWalks.API.Repository
             var uploadParams = new ImageUploadParams()
             {
                 File = new FileDescription(file.FileName, stream),
-                Folder = "region-images" // optional folder name
+                Folder = "region-images", // optional folder name
+                //ResourceType = "image",
+                Type = "authenticated"
             };
 
             var uploadResult = await _cloudinary.UploadAsync(uploadParams);
             return uploadResult.SecureUrl.ToString(); // return the image URL
         }
+
+        public string GetPrivateImageUrl(string publicId)
+        {
+            var url = _cloudinary.Api.UrlImgUp
+                .Signed(true)
+                .Secure(true)
+                .Type("authenticated")
+                .BuildUrl(publicId); // or BuildImageTag if you want full <img> tag
+
+            return url;
+        }
+
     }
 }
